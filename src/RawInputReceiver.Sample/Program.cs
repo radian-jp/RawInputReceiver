@@ -7,21 +7,23 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        var mouseReceiver = new RadianTools.Hardware.Input.Windows.RawInputReceiver(DeviceType.Mouse);
-        var keyboardReceiver = new RadianTools.Hardware.Input.Windows.RawInputReceiver(DeviceType.Keyboard);
-
-        mouseReceiver.MouseReceived += (e) =>
+        using var receiver = new RadianTools.Hardware.Input.Windows.RawInputReceiver();
+        Action<RawMouseEventArgs> mouseReceived = (e) =>
         {
             Console.WriteLine(e.ToString());
         };
 
-        keyboardReceiver.KeyboardReceived += (e) =>
+        Action<RawKeyboardEventArgs> keyboardReceived = (e) =>
         {
             Console.WriteLine(e.ToString());
         };
 
-        Console.WriteLine("Push 'q' key to exit.");
-        while (Console.ReadKey(true).Key != ConsoleKey.Q)
+        receiver.MouseReceived += mouseReceived;
+        receiver.KeyboardReceived += keyboardReceived;
+
+        Console.WriteLine("Push ESC key to exit.");
+
+        while (Console.ReadKey(true).Key != ConsoleKey.Escape)
         {
         }
     }
