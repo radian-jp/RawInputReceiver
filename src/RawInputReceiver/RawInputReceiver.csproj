@@ -4,11 +4,8 @@
     <TargetFramework>net9.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace />
+    <RootNamespace>RadianTools.Hardware.Input.Windows</RootNamespace>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\RadianTools.Interop.Windows\src\RadianTools.Interop.Windows\RadianTools.Interop.Windows.csproj" />
-  </ItemGroup>
 
 </Project>

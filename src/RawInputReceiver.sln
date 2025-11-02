@@ -7,10 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RawInputReceiver", "RawInpu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RawInputReceiver.Sample", "RawInputReceiver.Sample\RawInputReceiver.Sample.csproj", "{0E992A56-C741-EC8B-DBCE-E32E3C28D99D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadianTools.Interop.Windows", "RadianTools.Interop.Windows\src\RadianTools.Interop.Windows\RadianTools.Interop.Windows.csproj", "{B32527B6-5150-9550-F489-D74952E3894E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnmanagedStructGenerator", "RadianTools.Interop.Windows\src\UnmanagedStructGenerator\src\RadianTools.Generators.UnmanagedStructGenerator\UnmanagedStructGenerator.csproj", "{93EF27D5-AAE8-866C-2236-9E012AF49D35}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,14 +21,6 @@ Global
 		{0E992A56-C741-EC8B-DBCE-E32E3C28D99D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E992A56-C741-EC8B-DBCE-E32E3C28D99D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E992A56-C741-EC8B-DBCE-E32E3C28D99D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B32527B6-5150-9550-F489-D74952E3894E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B32527B6-5150-9550-F489-D74952E3894E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B32527B6-5150-9550-F489-D74952E3894E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B32527B6-5150-9550-F489-D74952E3894E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{93EF27D5-AAE8-866C-2236-9E012AF49D35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{93EF27D5-AAE8-866C-2236-9E012AF49D35}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{93EF27D5-AAE8-866C-2236-9E012AF49D35}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{93EF27D5-AAE8-866C-2236-9E012AF49D35}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

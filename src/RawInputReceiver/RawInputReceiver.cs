@@ -1,9 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using RadianTools.Interop.Windows;
+using RadianTools.Interop.Windows.Utility;
 
 namespace RadianTools.Hardware.Input.Windows;
 
+/// <summary>
+/// RawInputマウス情報
+/// </summary>
 public ref struct RawMouseEventArgs
 {
     public RawMouseEventArgs(ref HidDeviceDetail detail, ref RAWINPUT rawInput)
@@ -12,11 +16,23 @@ public ref struct RawMouseEventArgs
         Mouse = ref rawInput.data.mouse;
     }
 
+    /// <summary>
+    /// HIDデバイス詳細
+    /// </summary>
     public readonly ref HidDeviceDetail Detail;
+
+    /// <summary>
+    /// マウス情報情報
+    /// </summary>
     public readonly ref RAWMOUSE Mouse;
+
+    /// <inheritdoc />
     public override string ToString() => $"{Detail.ToString()}, {Mouse.ToString()}";
 }
 
+/// <summary>
+/// RawInputkキーボード情報
+/// </summary>
 public ref struct RawKeyboardEventArgs
 {
     public RawKeyboardEventArgs(ref HidDeviceDetail detail, ref RAWINPUT rawInput)
@@ -30,11 +46,16 @@ public ref struct RawKeyboardEventArgs
     public override string ToString() => $"{Detail.ToString()}, {Keyboard.ToString()}";
 }
 
-
+/// <summary>
+/// RawInput受信クラス
+/// </summary>
 public class RawInputReceiver : IDisposable
 {
     private bool _disposed;
 
+    /// <summary>
+    /// マウス情報受信時イベント
+    /// </summary>
     private Action<RawMouseEventArgs>? _mouseReceived;
     public event Action<RawMouseEventArgs> MouseReceived
     {
@@ -69,6 +90,9 @@ public class RawInputReceiver : IDisposable
         }
     }
 
+    /// <summary>
+    /// キーボード情報受信時イベント
+    /// </summary>
     private Action<RawKeyboardEventArgs>? _keyboardReceived;
     public event Action<RawKeyboardEventArgs> KeyboardReceived
     {
@@ -103,14 +127,24 @@ public class RawInputReceiver : IDisposable
         }
     }
 
-    private RawInputReceiverWindow _receiverWindow = null!;
+    /// <summary>
+    /// RawInput情報受信ウィンドウ
+    /// </summary>
+    private RawInputReceiverWindow _receiverWindow;
 
+    /// <summary>
+    /// コンストラクタ
+    /// </summary>
     public RawInputReceiver()
     {
+        // RawInput受信ウィンドウを作成し、メッセージループを起動
         _receiverWindow = new RawInputReceiverWindow(this);
         _receiverWindow.Run();
     }
 
+    /// <summary>
+    /// 解放処理
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) 
@@ -124,15 +158,28 @@ public class RawInputReceiver : IDisposable
         _receiverWindow.Dispose();
     }
 
+    /// <summary>
+    /// RawInput受信用ウィンドウ
+    /// </summary>
     private class RawInputReceiverWindow : HiddenWindow
     {
+        /// <summary>
+        /// 通知先RawInputReceiver
+        /// </summary>
         private RawInputReceiver _receiver;
 
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="receiver">通知先RawInputReceiver</param>
         public RawInputReceiverWindow(RawInputReceiver receiver)
         {
             _receiver = receiver;
         }
 
+        /// <summary>
+        /// マウスのRawInput受信を登録する。
+        /// </summary>
         public void RegisterMouse()
         {
             InvokeAsync(() =>
@@ -142,6 +189,9 @@ public class RawInputReceiver : IDisposable
             });
         }
 
+        /// <summary>
+        /// マウスのRawInput受信を解除する。
+        /// </summary>
         public void UnregisterMouse()
         {
             InvokeAsync(() =>
@@ -151,6 +201,9 @@ public class RawInputReceiver : IDisposable
             });
         }
 
+        /// <summary>
+        /// キーボードのRawInput受信を登録する。
+        /// </summary>
         public void RegisterKeyboard()
         {
             InvokeAsync(() =>
@@ -160,6 +213,9 @@ public class RawInputReceiver : IDisposable
             });
         }
 
+        /// <summary>
+        /// キーボードのRawInput受信を解除する。
+        /// </summary>
         public void UnregisterKeyboard()
         {
             InvokeAsync(() =>
@@ -169,7 +225,15 @@ public class RawInputReceiver : IDisposable
             });
         }
 
-        protected override nint WndProc(HWND hwnd, WindowMessage msg, nint wParam, nint lParam)
+        /// <summary>
+        /// ウィンドウプロシージャ
+        /// </summary>
+        /// <param name="hwnd">ウィンドウハンドル</param>
+        /// <param name="msg">ウィンドウメッセージ</param>
+        /// <param name="wParam">メッセージ追加情報1</param>
+        /// <param name="lParam">メッセージ追加情報2</param>
+        /// <returns>メッセージ処理結果</returns>
+        protected override IntPtr WndProc(HWND hwnd, WindowMessage msg, IntPtr wParam, IntPtr lParam)
         {
             switch (msg)
             {
@@ -181,9 +245,18 @@ public class RawInputReceiver : IDisposable
             return base.WndProc(hwnd, msg, wParam, lParam);
         }
 
-        private readonly ConcurrentDictionary<nint, HidDeviceDetail> _dicDeviceDetail = [];
+        /// <summary>
+        /// デバイス詳細Dictionary(Key:デバイスハンドル Value:デバイス詳細)
+        /// </summary>
+        private readonly ConcurrentDictionary<IntPtr, HidDeviceDetail> _dicDeviceDetail = [];
 
-        private void OnWmInput(HWND hwnd, nint wParam, nint lParam)
+        /// <summary>
+        /// WM_INPUTイベントハンドラ
+        /// </summary>
+        /// <param name="hwnd">ウィンドウハンドル</param>
+        /// <param name="wParam">メッセージ追加情報1</param>
+        /// <param name="lParam">メッセージ追加情報2</param>
+        private void OnWmInput(HWND hwnd, IntPtr wParam, IntPtr lParam)
         {
             const int RID_INPUT = 0x10000003;
 
@@ -213,6 +286,17 @@ public class RawInputReceiver : IDisposable
                 case RIM_TYPE.RIM_TYPEKEYBOARD:
                     if (_receiver._keyboardReceived != null)
                     {
+                        //不明なキーは無視する
+                        if (input.data.keyboard.VKey == VKey.Unknown)
+                            break;
+
+                        // 一部のキーは正しい VKey にならないのでMakeCode,Flagsから再解釈が必要
+                        //（例えば、そのままだと左右CTRLは一律 VK_CONTROL になってしまう）
+                        input.data.keyboard.VKey = HidHelper.GetTrueVKey(
+                            input.data.keyboard.VKey,
+                            input.data.keyboard.MakeCode,
+                            input.data.keyboard.Flags);
+
                         var keyboard = new RawKeyboardEventArgs(ref detail, ref input);
                         _receiver._keyboardReceived(keyboard);
                     }

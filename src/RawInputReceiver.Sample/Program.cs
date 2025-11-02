@@ -1,13 +1,10 @@
 ﻿using RadianTools.Hardware.Input.Windows;
-using RadianTools.Interop.Windows;
-
-namespace RawInputReceiver.Sample;
 
 internal class Program
 {
     static void Main(string[] args)
     {
-        using var receiver = new RadianTools.Hardware.Input.Windows.RawInputReceiver();
+        using var receiver = new RawInputReceiver();
         Action<RawMouseEventArgs> mouseReceived = (e) =>
         {
             Console.WriteLine(e.ToString());
