@@ -64,7 +64,7 @@ public static class HidHelper
         var manufacturer = "";
         var productName = "";
         var fh = Kernel32.CreateFile(devicePath, 0, FILE_SHARE.FILE_SHARE_READ, IntPtr.Zero, FILE_DISPOSITION.OPEN_EXISTING, 0, IntPtr.Zero);
-        if (!fh.IsInvalid)
+        if ( !fh.IsInvalid() )
         {
             try
             {
@@ -127,8 +127,8 @@ public static class HidHelper
 
     private static string GetDeviceInstanceId(ref Guid hidGuid)
     {
-        IntPtr deviceInfoSet = SetupApi.SetupDiGetClassDevs(ref hidGuid, IntPtr.Zero, IntPtr.Zero, DIGCF.DIGCF_PRESENT | DIGCF.DIGCF_DEVICEINTERFACE);
-        if (deviceInfoSet == IntPtr.Zero)
+        var deviceInfoSet = SetupApi.SetupDiGetClassDevs(ref hidGuid, IntPtr.Zero, Null<HWND>.Value, DIGCF.DIGCF_PRESENT | DIGCF.DIGCF_DEVICEINTERFACE);
+        if ( deviceInfoSet.IsNull() )
             return "";
 
         try

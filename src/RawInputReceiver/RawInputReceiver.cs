@@ -196,7 +196,7 @@ public class RawInputReceiver : IDisposable
         {
             InvokeAsync(() =>
             {
-                var device = new RAWINPUTDEVICE(RIM_TYPE.RIM_TYPEMOUSE, HWND.Null, true);
+                var device = new RAWINPUTDEVICE(RIM_TYPE.RIM_TYPEMOUSE, Null<HWND>.Value, true);
                 User32.RegisterRawInputDevices(in device, 1, Marshal.SizeOf<RAWINPUTDEVICE>());
             });
         }
@@ -220,7 +220,7 @@ public class RawInputReceiver : IDisposable
         {
             InvokeAsync(() =>
             {
-                var device = new RAWINPUTDEVICE(RIM_TYPE.RIM_TYPEKEYBOARD, HWND.Null, true);
+                var device = new RAWINPUTDEVICE(RIM_TYPE.RIM_TYPEKEYBOARD, Null<HWND>.Value, true);
                 User32.RegisterRawInputDevices(in device, 1, Marshal.SizeOf<RAWINPUTDEVICE>());
             });
         }
@@ -238,7 +238,7 @@ public class RawInputReceiver : IDisposable
             switch (msg)
             {
                 case WindowMessage.WM_INPUT:
-                    OnWmInput(hwnd, wParam, lParam);
+                    OnWmInput(hwnd, wParam, (HRAWINPUT)lParam);
                     break;
             }
 
@@ -256,14 +256,13 @@ public class RawInputReceiver : IDisposable
         /// <param name="hwnd">ウィンドウハンドル</param>
         /// <param name="wParam">メッセージ追加情報1</param>
         /// <param name="lParam">メッセージ追加情報2</param>
-        private void OnWmInput(HWND hwnd, IntPtr wParam, IntPtr lParam)
+        private void OnWmInput(HWND hwnd, IntPtr wParam, HRAWINPUT hRawInput)
         {
             const int RID_INPUT = 0x10000003;
 
-            var hRawInput = (HRAWINPUT)lParam;
             int headerSize = Marshal.SizeOf(typeof(RAWINPUTHEADER));
             int size = Marshal.SizeOf(typeof(RAWINPUT));
-            int result = User32.GetRawInputData(lParam, RID_INPUT, out var input, ref size, headerSize);
+            int result = User32.GetRawInputData(hRawInput, RID_INPUT, out var input, ref size, headerSize);
             if (result < 0)
                 return;
 

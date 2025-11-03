@@ -6,21 +6,21 @@ public static class Hid
 {
     [DllImport("hid.dll")]
     public static extern BOOL HidD_GetProductString(
-        IntPtr HidDeviceObject,
+        HANDLE HidDeviceObject,
         IntPtr Buffer,
         int BufferLength
     );
 
     [DllImport("hid.dll")]
     public static extern BOOL HidD_GetManufacturerString(
-        IntPtr HidDeviceObject,
+        HANDLE HidDeviceObject,
         IntPtr Buffer,
         int BufferLength
     );
 
     [DllImport("hid.dll")]
     public static extern BOOL HidD_GetSerialNumberString(
-        IntPtr HidDeviceObject,
+        HANDLE HidDeviceObject,
         IntPtr Buffer,
         int BufferLength
     );

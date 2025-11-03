@@ -159,7 +159,7 @@ public struct RAWINPUTDEVICE
         if (remove)
         {
             Flags = RIDEV.RIDEV_REMOVE;
-            HWndTarget = HWND.Null;
+            HWndTarget = Null<HWND>.Value;
         }
         else
         {
@@ -218,31 +218,48 @@ public struct MSG
     public int pt_y;
 }
 
-public record struct DEVINST(IntPtr Value)
+public interface IPtrHandle
 {
-    public static implicit operator IntPtr(DEVINST value) => value.Value;
-    public static implicit operator DEVINST(IntPtr value) => new DEVINST(value);
-    public static DEVINST Null = new DEVINST(IntPtr.Zero);
+    IntPtr Value { get; set; }
 }
 
-public record struct HWND(IntPtr Value)
+public static class Null<T> where T : unmanaged, IPtrHandle
 {
-    public static implicit operator IntPtr(HWND value) => value.Value;
-    public static implicit operator HWND(IntPtr value) => new HWND(value);
-    public static HWND Null = new HWND(IntPtr.Zero);
+    public static T Value = new T() { Value = IntPtr.Zero };
 }
 
-public record struct HANDLE(IntPtr Value)
+public static class IPtrHandleExtentions
 {
-    public static implicit operator IntPtr(HANDLE value) => value.Value;
-    public static implicit operator HANDLE(IntPtr value) => new HANDLE(value);
-    public static HANDLE Null = new HANDLE(IntPtr.Zero);
-    public bool IsInvalid => Value == -1;
+    public static bool IsNull(this IPtrHandle handle) => handle.Value == IntPtr.Zero;
 }
 
-public record struct HRAWINPUT(IntPtr Value)
+public record struct DEVINST(uint Value)
 {
-    public static implicit operator IntPtr(HRAWINPUT value) => value.Value;
-    public static implicit operator HRAWINPUT(IntPtr value) => new HRAWINPUT(value);
-    public static HRAWINPUT Null = new HRAWINPUT(IntPtr.Zero);
+    public static explicit operator uint(DEVINST value) => value.Value;
+    public static explicit operator DEVINST(uint value) => new DEVINST(value);
+}
+
+public record struct HWND(IntPtr Value) : IPtrHandle
+{
+    public static explicit operator IntPtr(HWND value) => value.Value;
+    public static explicit operator HWND(IntPtr value) => new HWND(value);
+}
+
+public record struct HANDLE(IntPtr Value) : IPtrHandle
+{
+    public static explicit operator IntPtr(HANDLE value) => value.Value;
+    public static explicit operator HANDLE(IntPtr value) => new HANDLE(value);
+    public bool IsInvalid() => Value == -1;
+}
+
+public record struct HRAWINPUT(IntPtr Value) : IPtrHandle
+{
+    public static explicit operator IntPtr(HRAWINPUT value) => value.Value;
+    public static explicit operator HRAWINPUT(IntPtr value) => new HRAWINPUT(value);
+}
+
+public record struct HDEVINFO(IntPtr Value) : IPtrHandle
+{
+    public static explicit operator IntPtr(HDEVINFO value) => value.Value;
+    public static explicit operator HDEVINFO(IntPtr value) => new HDEVINFO(value);
 }
