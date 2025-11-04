@@ -144,7 +144,7 @@ public class HiddenWindow : IDisposable
     /// </summary>
     /// <param name="action">実行するAction</param>
     /// <returns></returns>
-    /// <exception cref="ObjectDisposedException">Actionを実行しているTask</exception>
+    /// <exception cref="ObjectDisposedException">インスタンスが解放済み</exception>
     public Task InvokeAsync(Action action)
     {
         if (IsDisposed)
