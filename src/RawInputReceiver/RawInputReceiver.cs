@@ -132,12 +132,12 @@ public ref struct RawMouseEventArgs
     public readonly ref HDEVICE Handle;
 
     /// <summary>
-    /// X移動量（MoveAbsolute=trueの場合、絶対座標）
+    /// X移動量（MoveAbsolute=trueの場合、スクリーンX座標）
     /// </summary>
     public readonly int X;
 
     /// <summary>
-    /// Y移動量（MoveAbsolute=trueの場合、絶対座標）
+    /// Y移動量（MoveAbsolute=trueの場合、スクリーンY座標）
     /// </summary>
     public readonly int Y;
 
@@ -170,12 +170,12 @@ public ref struct RawMouseEventArgs
     public override string ToString() =>
         $"{nameof(Handle)} = 0x{Handle.Value:X16}"
         + $", {nameof(MouseOp)} = {MouseOp}"
-        + $", {nameof(PushState)} = {PushState} "
+        + $", {nameof(PushState)} = {PushState}"
         + $", {nameof(MoveAbsolute)} = {MoveAbsolute}"
         + $", {nameof(X)} = {X}"
         + $", {nameof(Y)} = {Y}"
         + $", {nameof(WheelDelta)} = {WheelDelta}"
-        + $", {nameof(MappingVirtualDesktop)} = {MappingVirtualDesktop} "
+        + $", {nameof(MappingVirtualDesktop)} = {MappingVirtualDesktop}"
         + $", {nameof(Detail.ProductName)} = {Detail.ProductName}"
         + $", {nameof(Detail.Manufacturer)} = {Detail.Manufacturer}"
         ;
