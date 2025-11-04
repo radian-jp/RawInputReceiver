@@ -1,25 +1,51 @@
-﻿using RadianTools.Interop.Windows.Utility;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace RadianTools.Interop.Windows;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct HRESULT
+public struct CREATESTRUCT
 {
-    private int _value;
-    int Value => _value;
-
-    public bool Succeeded => this.Value >= 0;
-    public bool Failed => this.Value < 0;
-    public bool IsOK => this.Value == 0;
-    public bool IsNotOK => this.Value != 0;
-
-    public HRESULT ThrowOnFailure(IntPtr errorInfo = default)
-    {
-        Marshal.ThrowExceptionForHR(this.Value, errorInfo);
-        return this;
-    }
+    public IntPtr lpCreateParams;
+    public IntPtr hInstance;
+    public IntPtr hMenu;
+    public IntPtr hwndParent;
+    public int cy;
+    public int cx;
+    public int y;
+    public int x;
+    public int style;
+    public IntPtr lpszName;
+    public IntPtr lpszClass;
+    public int dwExStyle;
 }
+
+public record struct DEVINST(uint Value)
+{
+    public static explicit operator uint(DEVINST value) => value.Value;
+    public static explicit operator DEVINST(uint value) => new DEVINST(value);
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct DEV_BROADCAST_HANDLE
+{
+    public int dbch_size;
+    public int dbch_devicetype;
+    public int dbch_reserved;
+    public IntPtr dbch_handle;
+    public IntPtr dbch_hdevnotify;
+    public Guid dbch_eventguid;
+    public int dbch_nameoffset;
+    public byte dbch_data;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct DEV_BROADCAST_HDR
+{
+    public int dbch_size;
+    public DBT_DEVTYP dbch_devicetype;
+    public int dbch_reserved;
+}
+
 
 [StructLayout(LayoutKind.Sequential)]
 public struct BOOL : IEquatable<BOOL>
@@ -45,16 +71,22 @@ public struct DEVPROPKEY
 /// </summary>
 public static class DEVPKEY
 {
-    public static readonly DEVPROPKEY Device_InstanceId = new DEVPROPKEY
-    {
-        fmtid = new Guid("78A7C492-0E3B-4EFB-B00B-DCB9D3C5E9B0"),
-        pid = 256
-    };
-
     public static readonly DEVPROPKEY NAME = new DEVPROPKEY
     {
         fmtid = new Guid("B725F130-47EF-101A-A5F1-02608C9EEBAC"),
         pid = 10
+    };
+
+    public static readonly DEVPROPKEY Device_DeviceDesc = new DEVPROPKEY
+    {
+        fmtid = new Guid("A45C254E-DF1C-4EFD-8020-67D146A850E0"), 
+        pid = 2
+    };
+
+    public static readonly DEVPROPKEY Device_FriendlyName = new DEVPROPKEY
+    {
+        fmtid = new Guid("A45C254E-DF1C-4EFD-8020-67D146A850E0"),
+        pid = 14
     };
 
     public static readonly DEVPROPKEY Device_Manufacturer = new DEVPROPKEY
@@ -65,54 +97,21 @@ public static class DEVPKEY
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct SP_DEVICE_INTERFACE_DATA
+public struct HRESULT
 {
-    public uint cbSize;
-    public Guid InterfaceClassGuid;
-    public uint Flags;
-    public IntPtr Reserved;
-}
+    private int _value;
+    int Value => _value;
 
-[StructLayout(LayoutKind.Sequential)]
-public struct SP_DEVINFO_DATA
-{
-    public uint cbSize;
-    public Guid ClassGuid;
-    public uint DevInst;
-    public IntPtr Reserved;
-}
+    public bool Succeeded => this.Value >= 0;
+    public bool Failed => this.Value < 0;
+    public bool IsOK => this.Value == 0;
+    public bool IsNotOK => this.Value != 0;
 
-[StructLayout(LayoutKind.Sequential)]
-public struct RAWINPUTHEADER
-{
-    public RIM_TYPE Type;
-    public int Size;
-    public IntPtr DeviceHandle;
-    public IntPtr WParam;
-}
-
-[StructLayout(LayoutKind.Sequential, Pack = 2)]
-public record struct RAWMOUSE
-{
-    public short Flags;
-    private short _padding;
-    public RI_MOUSE ButtonFlags;
-    public short ButtonData;
-    public int RawButtons;
-    public int LastX;
-    public int LastY;
-    public int ExtraInformation;
-}
-
-[StructLayout(LayoutKind.Sequential, Pack = 2)]
-public record struct RAWKEYBOARD
-{
-    public ushort MakeCode;
-    public RI_KEY Flags;
-    public ushort Reserved;
-    public VKey VKey;
-    public WindowMessage Message;
-    public int ExtraInformation;
+    public HRESULT ThrowOnFailure(IntPtr errorInfo = default)
+    {
+        Marshal.ThrowExceptionForHR(this.Value, errorInfo);
+        return this;
+    }
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 2)]
@@ -170,30 +169,78 @@ public struct RAWINPUTDEVICE
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct CREATESTRUCT
+public struct RAWINPUTDEVICELIST
 {
-    public IntPtr lpCreateParams;
-    public IntPtr hInstance;
-    public IntPtr hMenu;
-    public IntPtr hwndParent;
-    public int cy;
-    public int cx;
-    public int y;
-    public int x;
-    public int style;
-    public IntPtr lpszName;
-    public IntPtr lpszClass;
-    public int dwExStyle;
+    public HDEVICE hDevice;
+    public RIM_TYPE dwType;
 }
 
-public delegate IntPtr DelegateWndProc(HWND hwnd, WindowMessage msg, IntPtr wParam, IntPtr lParam);
+[StructLayout(LayoutKind.Sequential)]
+public struct RAWINPUTHEADER
+{
+    public RIM_TYPE Type;
+    public uint dwSize;
+    public HDEVICE hDevice;
+    public IntPtr wParam;
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 2)]
+public record struct RAWKEYBOARD
+{
+    public ushort MakeCode;
+    public RI_KEY Flags;
+    public ushort Reserved;
+    public VKey VKey;
+    public WindowMessage Message;
+    public int ExtraInformation;
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 2)]
+public record struct RAWMOUSE
+{
+    public MOUSE_MOVE Flags;
+    private short _padding;
+    public RI_MOUSE ButtonFlags;
+    public short ButtonData;
+    public int RawButtons;
+    public int LastX;
+    public int LastY;
+    public int ExtraInformation;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct RECT
+{
+    public int Left;
+    public int Top;
+    public int Right;
+    public int Bottom;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct SP_DEVICE_INTERFACE_DATA
+{
+    public uint cbSize;
+    public Guid InterfaceClassGuid;
+    public uint Flags;
+    public IntPtr Reserved;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct SP_DEVINFO_DATA
+{
+    public uint cbSize;
+    public Guid ClassGuid;
+    public uint DevInst;
+    public IntPtr Reserved;
+}
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
 public struct WNDCLASSEX
 {
     public uint cbSize;
     public uint style;
-    public DelegateWndProc lpfnWndProc;
+    public WNDPROC lpfnWndProc;
     public int cbClsExtra;
     public int cbWndExtra;
     public IntPtr hInstance;
@@ -218,9 +265,14 @@ public struct MSG
     public int pt_y;
 }
 
-public interface IPtrHandle
+public delegate IntPtr WNDPROC(HWND hwnd, WindowMessage msg, IntPtr wParam, IntPtr lParam);
+
+#region Handles
+
+public interface IPtrHandle : IEquatable<IntPtr>
 {
     IntPtr Value { get; set; }
+    bool IEquatable<IntPtr>.Equals(IntPtr other) => Value != other;
 }
 
 public static class Null<T> where T : unmanaged, IPtrHandle
@@ -231,12 +283,6 @@ public static class Null<T> where T : unmanaged, IPtrHandle
 public static class IPtrHandleExtentions
 {
     public static bool IsNull(this IPtrHandle handle) => handle.Value == IntPtr.Zero;
-}
-
-public record struct DEVINST(uint Value)
-{
-    public static explicit operator uint(DEVINST value) => value.Value;
-    public static explicit operator DEVINST(uint value) => new DEVINST(value);
 }
 
 public record struct HWND(IntPtr Value) : IPtrHandle
@@ -252,6 +298,13 @@ public record struct HANDLE(IntPtr Value) : IPtrHandle
     public bool IsInvalid() => Value == -1;
 }
 
+public record struct HDEVICE(IntPtr Value) : IPtrHandle
+{
+    public static explicit operator IntPtr(HDEVICE value) => value.Value;
+    public static explicit operator HDEVICE(IntPtr value) => new HDEVICE(value);
+}
+
+
 public record struct HRAWINPUT(IntPtr Value) : IPtrHandle
 {
     public static explicit operator IntPtr(HRAWINPUT value) => value.Value;
@@ -263,3 +316,5 @@ public record struct HDEVINFO(IntPtr Value) : IPtrHandle
     public static explicit operator IntPtr(HDEVINFO value) => value.Value;
     public static explicit operator HDEVINFO(IntPtr value) => new HDEVINFO(value);
 }
+
+#endregion

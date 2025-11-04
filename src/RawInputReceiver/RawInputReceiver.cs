@@ -1,9 +1,24 @@
-﻿using System.Collections.Concurrent;
+﻿using RadianTools.Interop.Windows;
+using System.Collections.Concurrent;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
-using RadianTools.Interop.Windows;
-using RadianTools.Interop.Windows.Utility;
 
 namespace RadianTools.Hardware.Input.Windows;
+
+/// <summary>
+/// マウス操作
+/// </summary>
+public enum MouseOp
+{
+    Move = 0,
+    ButtonLeft,
+    ButtonRight,
+    ButtonMiddle,
+    Button4,
+    Button5,
+    VWheel,
+    HWheel,
+}
 
 /// <summary>
 /// RawInputマウス情報
@@ -12,8 +27,93 @@ public ref struct RawMouseEventArgs
 {
     public RawMouseEventArgs(ref HidDeviceDetail detail, ref RAWINPUT rawInput)
     {
+        Handle = ref rawInput.header.hDevice;
         Detail = ref detail;
         Mouse = ref rawInput.data.mouse;
+        WheelDelta = ref Mouse.ButtonData;
+
+        MoveAbsolute = (Mouse.Flags & MOUSE_MOVE.MOUSE_MOVE_ABSOLUTE) != 0;
+        MappingVirtualDesktop = (Mouse.Flags & MOUSE_MOVE.MOUSE_VIRTUAL_DESKTOP) != 0;
+        if (MoveAbsolute)
+        {
+            RECT rect;
+            if (MappingVirtualDesktop)
+            {
+                rect.Left = User32.GetSystemMetrics(SM_INDEX.SM_CXVIRTUALSCREEN);
+                rect.Top = User32.GetSystemMetrics(SM_INDEX.SM_CYVIRTUALSCREEN);
+                rect.Right = User32.GetSystemMetrics(SM_INDEX.SM_CXVIRTUALSCREEN);
+                rect.Bottom = User32.GetSystemMetrics(SM_INDEX.SM_CYVIRTUALSCREEN);
+            }
+            else
+            {
+                rect.Left = User32.GetSystemMetrics(SM_INDEX.SM_CXVIRTUALSCREEN);
+                rect.Top = User32.GetSystemMetrics(SM_INDEX.SM_CYVIRTUALSCREEN);
+                rect.Right = User32.GetSystemMetrics(SM_INDEX.SM_CXVIRTUALSCREEN);
+                rect.Bottom = User32.GetSystemMetrics(SM_INDEX.SM_CYVIRTUALSCREEN);
+            }
+
+            X = User32.MulDiv(X, rect.Right, 65535) + rect.Left;
+            Y = User32.MulDiv(Y, rect.Bottom, 65535) + rect.Top;
+        } 
+        else
+        {
+            X = Mouse.LastX;
+            Y = Mouse.LastY;
+        }
+
+        if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_LEFT_BUTTON_DOWN) != 0)
+        {
+            MouseOp = MouseOp.ButtonLeft;
+            PushState = true;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_LEFT_BUTTON_UP) != 0)
+        {
+            MouseOp = MouseOp.ButtonLeft;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_RIGHT_BUTTON_DOWN) != 0)
+        {
+            MouseOp = MouseOp.ButtonRight;
+            PushState = true;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_RIGHT_BUTTON_UP) != 0)
+        {
+            MouseOp = MouseOp.ButtonRight;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_MIDDLE_BUTTON_DOWN) != 0)
+        {
+            MouseOp = MouseOp.ButtonRight;
+            PushState = true;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_MIDDLE_BUTTON_UP) != 0)
+        {
+            MouseOp = MouseOp.ButtonMiddle;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_BUTTON_4_DOWN) != 0)
+        {
+            MouseOp = MouseOp.Button4;
+            PushState = true;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_BUTTON_4_UP) != 0)
+        {
+            MouseOp = MouseOp.Button4;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_BUTTON_5_DOWN) != 0)
+        {
+            MouseOp = MouseOp.Button5;
+            PushState = true;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_BUTTON_5_UP) != 0)
+        {
+            MouseOp = MouseOp.Button5;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_WHEEL) != 0)
+        {
+            MouseOp = MouseOp.VWheel;
+        }
+        else if ((Mouse.ButtonFlags & RI_MOUSE.RI_MOUSE_HWHEEL) != 0)
+        {
+            MouseOp = MouseOp.HWheel;
+        }
     }
 
     /// <summary>
@@ -26,8 +126,59 @@ public ref struct RawMouseEventArgs
     /// </summary>
     public readonly ref RAWMOUSE Mouse;
 
+    /// <summary>
+    /// デバイスハンドル
+    /// </summary>
+    public readonly ref HDEVICE Handle;
+
+    /// <summary>
+    /// X移動量（MoveAbsolute=trueの場合、絶対座標）
+    /// </summary>
+    public readonly int X;
+
+    /// <summary>
+    /// Y移動量（MoveAbsolute=trueの場合、絶対座標）
+    /// </summary>
+    public readonly int Y;
+
+    /// <summary>
+    /// ホイール移動量
+    /// </summary>
+    public readonly ref short WheelDelta;
+
+    /// <summary>
+    /// マウス操作
+    /// </summary>
+    public readonly MouseOp MouseOp;
+
+    /// <summary>
+    /// On/Off状態
+    /// </summary>
+    public readonly bool PushState;
+
+    /// <summary>
+    /// LastX, LastY が絶対座標かどうか
+    /// </summary>
+    public readonly bool MoveAbsolute;
+
+    /// <summary>
+    /// マウス座標が仮想デスクトップにマッピングされているかどうか
+    /// </summary>
+    public readonly bool MappingVirtualDesktop;
+
     /// <inheritdoc />
-    public override string ToString() => $"{Detail.ToString()}, {Mouse.ToString()}";
+    public override string ToString() =>
+        $"{nameof(Handle)} = 0x{Handle.Value:X16}"
+        + $", {nameof(MouseOp)} = {MouseOp}"
+        + $", {nameof(PushState)} = {PushState} "
+        + $", {nameof(MoveAbsolute)} = {MoveAbsolute}"
+        + $", {nameof(X)} = {X}"
+        + $", {nameof(Y)} = {Y}"
+        + $", {nameof(WheelDelta)} = {WheelDelta}"
+        + $", {nameof(MappingVirtualDesktop)} = {MappingVirtualDesktop} "
+        + $", {nameof(Detail.ProductName)} = {Detail.ProductName}"
+        + $", {nameof(Detail.Manufacturer)} = {Detail.Manufacturer}"
+        ;
 }
 
 /// <summary>
@@ -37,13 +188,47 @@ public ref struct RawKeyboardEventArgs
 {
     public RawKeyboardEventArgs(ref HidDeviceDetail detail, ref RAWINPUT rawInput)
     {
+        Handle = ref rawInput.header.hDevice;
         Detail = ref detail;
         Keyboard = ref rawInput.data.keyboard;
+        VKey = ref rawInput.data.keyboard.VKey;
+
+        PushState = (Keyboard.Flags & RI_KEY.RI_KEY_BREAK) == 0;
     }
 
+    /// <summary>
+    /// HIDデバイス詳細
+    /// </summary>
     public readonly ref HidDeviceDetail Detail;
+
+    /// <summary>
+    /// キーボード状態情報
+    /// </summary>
     public readonly ref RAWKEYBOARD Keyboard;
-    public override string ToString() => $"{Detail.ToString()}, {Keyboard.ToString()}";
+
+    /// <summary>
+    /// デバイスハンドル
+    /// </summary>
+    public readonly ref HDEVICE Handle;
+
+    /// <summary>
+    /// 仮想キーコード
+    /// </summary>
+    public readonly ref VKey VKey;
+
+    /// <summary>
+    /// On/Off状態
+    /// </summary>
+    public readonly bool PushState;
+
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"{nameof(Handle)} = 0x{Handle.Value:X16}"
+        + $", {nameof(VKey)} = {VKey}"
+        + $", {nameof(PushState)} = {PushState}"
+        + $", {nameof(Detail.ProductName)} = {Detail.ProductName}"
+        + $", {nameof(Detail.Manufacturer)} = {Detail.Manufacturer}"
+        ;
 }
 
 /// <summary>
@@ -147,7 +332,7 @@ public class RawInputReceiver : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed) 
+        if (_disposed)
             return;
 
         _disposed = true;
@@ -174,6 +359,14 @@ public class RawInputReceiver : IDisposable
         /// <param name="receiver">通知先RawInputReceiver</param>
         public RawInputReceiverWindow(RawInputReceiver receiver)
         {
+            // デバイス詳細キャッシュ作成
+            var devHandles = HidHelper.GetRawInputDeviceHandles();
+            foreach (var hDevice in devHandles)
+            {
+                var detail = HidHelper.GetDeviceDetail((HDEVICE)hDevice);
+                _dicDeviceDetail[hDevice] = detail;
+            }
+
             _receiver = receiver;
         }
 
@@ -237,6 +430,11 @@ public class RawInputReceiver : IDisposable
         {
             switch (msg)
             {
+                case WindowMessage.WM_DEVICECHANGE:
+                    if (wParam == (IntPtr)DBT_WPARAM.DBT_DEVNODES_CHANGED)
+                        OnDevNodesChanged(hwnd);
+                    break;
+
                 case WindowMessage.WM_INPUT:
                     OnWmInput(hwnd, wParam, (HRAWINPUT)lParam);
                     break;
@@ -248,7 +446,7 @@ public class RawInputReceiver : IDisposable
         /// <summary>
         /// デバイス詳細Dictionary(Key:デバイスハンドル Value:デバイス詳細)
         /// </summary>
-        private readonly ConcurrentDictionary<IntPtr, HidDeviceDetail> _dicDeviceDetail = [];
+        private readonly ConcurrentDictionary<HDEVICE, HidDeviceDetail> _dicDeviceDetail = [];
 
         /// <summary>
         /// WM_INPUTイベントハンドラ
@@ -266,10 +464,11 @@ public class RawInputReceiver : IDisposable
             if (result < 0)
                 return;
 
-            if (!_dicDeviceDetail.TryGetValue(input.header.DeviceHandle, out var detail))
+            // キャッシュからデバイス詳細を取り出す。無ければ取得する。
+            if (!_dicDeviceDetail.TryGetValue(input.header.hDevice, out var detail))
             {
-                detail = HidHelper.GetDeviceDetail(input.header.DeviceHandle);
-                _dicDeviceDetail[input.header.DeviceHandle] = detail;
+                detail = HidHelper.GetDeviceDetail(input.header.hDevice);
+                _dicDeviceDetail[input.header.hDevice] = detail;
             }
 
             switch (input.header.Type)
@@ -285,8 +484,8 @@ public class RawInputReceiver : IDisposable
                 case RIM_TYPE.RIM_TYPEKEYBOARD:
                     if (_receiver._keyboardReceived != null)
                     {
-                        //不明なキーは無視する
-                        if (input.data.keyboard.VKey == VKey.Unknown)
+                        // KEYBOARD_OVERRUN_MAKE_CODEは無視する
+                        if (input.data.keyboard.VKey == VKey.KEYBOARD_OVERRUN_MAKE_CODE)
                             break;
 
                         // 一部のキーは正しい VKey にならないのでMakeCode,Flagsから再解釈が必要
@@ -303,5 +502,30 @@ public class RawInputReceiver : IDisposable
             }
         }
 
+        /// <summary>
+        /// デバイスツリー変化時
+        /// </summary>
+        /// <param name="hwnd">ウィンドウハンドル</param>
+        private void OnDevNodesChanged(HWND hwnd)
+        {
+            uint numDevices = 0;
+            uint cbSize = (uint)Marshal.SizeOf<RAWINPUTDEVICELIST>();
+            if (User32.GetRawInputDeviceList(IntPtr.Zero, ref numDevices, cbSize) == -1)
+                return;
+
+            Span<RAWINPUTDEVICELIST> pDevList = stackalloc RAWINPUTDEVICELIST[(int)numDevices];
+            if (User32.GetRawInputDeviceList(ref pDevList[0], ref numDevices, cbSize) == -1)
+                return;
+
+            //キャッシュ中のデバイス詳細から存在しないハンドルの要素を削除
+            var existHandles = HidHelper.GetRawInputDeviceHandles();
+            var dicHandles = _dicDeviceDetail.Keys.ToArray();
+            for (var i = dicHandles.Length - 1; i >= 0; i--)
+            {
+                var handle = dicHandles[i];
+                if (!existHandles.Contains(handle))
+                    _dicDeviceDetail.TryRemove(handle, out var _);
+            }
+        }
     }
 }

@@ -70,6 +70,18 @@ public enum CONFIGRET : uint
     CR_INVALID_STRUCTURE_SIZE = 0x00000040
 }
 
+public enum DBT_WPARAM
+{
+    DBT_DEVNODES_CHANGED = 0x0007,
+    DBT_DEVICEREMOVECOMPLETE = 0x8004,
+}
+
+public enum DBT_DEVTYP
+{
+    DBT_DEVTYP_DEVICEINTERFACE = 0x00000005,
+    DBT_DEVTYP_HANDLE = 0x00000006,
+}
+
 public enum FILE_ACCESS : uint
 {
     GENERIC_ALL = 0x10000000,
@@ -147,16 +159,29 @@ public enum GWLP : int
     GWLP_USERDATA = -21
 }
 
-public enum GPFIDL_FLAGS : uint
+public enum GPFIDL : uint
 {
     GPFIDL_DEFAULT = 0U,
     GPFIDL_ALTNAME = 1U,
     GPFIDL_UNCPRINTER = 2U,
 }
 
-public enum SPDRP
+public enum HIDStringIndex : uint
 {
-    SPDRP_FRIENDLYNAME = 0x0000000C,
+    LangID = 0,
+    Manufacturer,
+    Product,
+    SerialNumber
+}
+
+[Flags]
+public enum MOUSE_MOVE : ushort
+{
+    MOUSE_MOVE_RELATIVE = 0x00,
+    MOUSE_MOVE_ABSOLUTE = 0x01,
+    MOUSE_VIRTUAL_DESKTOP = 0x02,
+    MOUSE_ATTRIBUTES_CHANGED = 0x04,
+    MOUSE_MOVE_NOCOALESCE = 0x08,
 }
 
 [Flags]
@@ -176,6 +201,15 @@ public enum RIDEV : int
     /// 非フォアグラウンドでも入力を受け取る
     /// </summary>
     RIDEV_INPUTSINK = 0x00000100,
+}
+
+public enum MAPVK : uint
+{
+    MAPVK_VK_TO_VSC = 0,
+    MAPVK_VSC_TO_VK,
+    MAPVK_VK_TO_CHAR,
+    MAPVK_VSC_TO_VK_EX,
+    MAPVK_VK_TO_VSC_EX,
 }
 
 public enum RIDI : int
@@ -218,13 +252,17 @@ public enum RI_KEY : ushort
     RI_KEY_E1 = 0x0004,
 }
 
-public enum MAPVK : uint
+public enum SM_INDEX
 {
-    MAPVK_VK_TO_VSC = 0,
-    MAPVK_VSC_TO_VK,
-    MAPVK_VK_TO_CHAR,
-    MAPVK_VSC_TO_VK_EX,
-    MAPVK_VK_TO_VSC_EX,
+    SM_CXSCREEN = 0,
+    SM_CYSCREEN = 1,
+    SM_CXVIRTUALSCREEN = 78,
+    SM_CYVIRTUALSCREEN = 79,
+}
+
+public enum SPDRP
+{
+    SPDRP_FRIENDLYNAME = 0x0000000C,
 }
 
 /// <summary>
@@ -430,7 +468,7 @@ public enum VKey : ushort
     VK_NONAME = 0xFC,
     VK_PA1 = 0xFD,
     VK_OEM_CLEAR = 0xFE,
-    Unknown = 0xFF,
+    KEYBOARD_OVERRUN_MAKE_CODE = 0xFF,
 }
 
 /// <summary>

@@ -24,4 +24,12 @@ public static class Hid
         IntPtr Buffer,
         int BufferLength
     );
+
+    [DllImport("hid.dll")]
+    public static extern BOOL HidD_GetIndexedString(
+        HANDLE HidDeviceObject,
+        HIDStringIndex StringIndex,
+        IntPtr Buffer,
+        int BufferLength
+    );
 }

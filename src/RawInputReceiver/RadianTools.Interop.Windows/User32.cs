@@ -28,7 +28,7 @@ public static class User32
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     public static extern int GetRawInputDeviceInfo(
-        IntPtr hDevice,
+        HDEVICE hDevice,
         RIDI uiCommand,
         IntPtr pData,
         ref int pcbSize
@@ -36,14 +36,29 @@ public static class User32
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     public static extern int GetRawInputDeviceInfo(
-        IntPtr hDevice,
+        HDEVICE hDevice,
         RIDI uiCommand,
         ref char pData,
         ref int pcbSize
     );
 
+    [DllImport("User32.dll")]
+    public static extern int GetRawInputDeviceList(
+        IntPtr pRawInputDeviceList,
+        ref uint puiNumDevices,
+        uint cbSize);
+
+    [DllImport("User32.dll")]
+    public static extern int GetRawInputDeviceList(
+        ref RAWINPUTDEVICELIST pRawInputDeviceList,
+        ref uint puiNumDevices,
+        uint cbSize);
+
+    [DllImport("User32.dll")]
+    public static extern int GetSystemMetrics(SM_INDEX nIndex);
+
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern IntPtr DefWindowProc(HWND hWnd, WindowMessage msg, IntPtr wParam, IntPtr lParam);  
+    public static extern IntPtr DefWindowProc(HWND hWnd, WindowMessage msg, IntPtr wParam, IntPtr lParam);
 
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
     private static extern IntPtr SetWindowLongPtr64(HWND hWnd, GWLP nIndex, IntPtr dwNewLong);
@@ -66,7 +81,7 @@ public static class User32
     public static DelegateGetWindowLongPtr64 GetWindowLongPtr = (IntPtr.Size == 8) ? GetWindowLongPtr64 : GetWindowLong32;
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    public static extern ushort RegisterClassEx([In] ref WNDCLASSEX lpwcx);
+    public static extern ushort RegisterClassEx(in WNDCLASSEX lpwcx);
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     public static extern bool UnregisterClass(string lpClassName, IntPtr hInstance);
@@ -107,4 +122,22 @@ public static class User32
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern uint MapVirtualKey(uint uCode, MAPVK uMapType);
 
+    public static int MulDiv(int number, int numerator, int denominator)
+    {
+        if (denominator == 0)
+            return -1;
+
+        long product = (long)number * numerator;
+
+        long result;
+        if (product >= 0)
+            result = (product + denominator / 2) / denominator; // 正の丸め → 切り上げ
+        else
+            result = (product - denominator / 2) / denominator; // 負の丸め → 切り捨て
+
+        if (result < int.MinValue || result > int.MaxValue)
+            return -1; // オーバーフロー検出
+
+        return (int)result;
+    }
 }

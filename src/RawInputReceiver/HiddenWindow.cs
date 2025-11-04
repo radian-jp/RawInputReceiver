@@ -2,8 +2,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using RadianTools.Interop.Windows;
 
-namespace RadianTools.Interop.Windows.Utility;
+namespace RadianTools.Hardware.Input.Windows;
 
 /// <summary>
 /// 不可視ウィンドウクラス(専用スレッド動作)
@@ -17,7 +18,7 @@ public class HiddenWindow : IDisposable
     private static Lazy<string> _windowClassName = new Lazy<string>(() => "HiddenWindowClass_" + Guid.NewGuid().ToString("N"));
     private static ushort? _atomWindow;
     private static IntPtr _hInstance = Kernel32.GetModuleHandle(IntPtr.Zero);
-    private static DelegateWndProc _wndProcDelegate = WndProcGateway;
+    private static WNDPROC _wndProcDelegate = WndProcGateway;
 
     /// <summary>
     /// Dispose済みかどうか
@@ -169,7 +170,7 @@ public class HiddenWindow : IDisposable
         wc.lpfnWndProc = _wndProcDelegate;
         wc.hInstance = _hInstance;
         wc.lpszClassName = _windowClassName.Value;
-        ushort atom = User32.RegisterClassEx(ref wc);
+        ushort atom = User32.RegisterClassEx(in wc);
         if (atom == 0)
         {
             throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -227,8 +228,7 @@ public class HiddenWindow : IDisposable
     /// <param name="msg">ウィンドウメッセージ</param>
     /// <param name="wParam">メッセージ追加情報1</param>
     /// <param name="lParam">メッセージ追加情報2</param>
-    /// <returns>メッセージ処理結果。
-    /// 継承先では、基本的には base.WndProc(hwnd, msg, wParam, lParam) の戻り値を返すこと。</returns>
+    /// <returns>メッセージ処理結果。継承先では、基本的には base.WndProc(hwnd, msg, wParam, lParam) の戻り値を返すこと。</returns>
     protected virtual IntPtr WndProc(HWND hwnd, WindowMessage msg, IntPtr wParam, IntPtr lParam)
     {
         if ((uint)msg == _msgInvokeAsync)

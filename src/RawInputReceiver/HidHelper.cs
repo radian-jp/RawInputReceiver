@@ -1,13 +1,37 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using RadianTools.Interop.Windows;
 
-namespace RadianTools.Interop.Windows;
+namespace RadianTools.Hardware.Input.Windows;
 
 /// <summary>
 /// HID用補助クラス
 /// </summary>
 public static class HidHelper
 {
+    /// <summary>
+    /// 存在するRAWINPUTデバイスのデバイスハンドルを取得する。
+    /// </summary>
+    /// <returns>デバイスハンドルのList。取得失敗時は空のList。</returns>
+    public static IReadOnlyList<HDEVICE> GetRawInputDeviceHandles()
+    {
+        uint numDevices = 0;
+        uint cbSize = (uint)Marshal.SizeOf<RAWINPUTDEVICELIST>();
+        if (User32.GetRawInputDeviceList(IntPtr.Zero, ref numDevices, cbSize) == -1)
+            return Array.Empty<HDEVICE>();
+
+        Span<RAWINPUTDEVICELIST> pDevList = stackalloc RAWINPUTDEVICELIST[(int)numDevices];
+        if (User32.GetRawInputDeviceList(ref pDevList[0], ref numDevices, cbSize) == -1)
+            return Array.Empty<HDEVICE>();
+
+        var listHandles = new List<HDEVICE>();
+        foreach (var dev in pDevList)
+        {
+            listHandles.Add(dev.hDevice);
+        }
+        return listHandles;
+    }
+
     /// <summary>
     /// 仮想キーコードをスキャンコード、スキャンコード情報フラグを元に修正する。
     /// </summary>
@@ -54,7 +78,7 @@ public static class HidHelper
     /// </summary>
     /// <param name="hDevice">デバイスハンドル</param>
     /// <returns>デバイス詳細</returns>
-    public static HidDeviceDetail GetDeviceDetail(IntPtr hDevice)
+    public static HidDeviceDetail GetDeviceDetail(HDEVICE hDevice)
     {
         var devicePath = GetDevicePath(hDevice);
         if (string.IsNullOrEmpty(devicePath))
@@ -64,7 +88,7 @@ public static class HidHelper
         var manufacturer = "";
         var productName = "";
         var fh = Kernel32.CreateFile(devicePath, 0, FILE_SHARE.FILE_SHARE_READ, IntPtr.Zero, FILE_DISPOSITION.OPEN_EXISTING, 0, IntPtr.Zero);
-        if ( !fh.IsInvalid() )
+        if (!fh.IsInvalid())
         {
             try
             {
@@ -72,8 +96,14 @@ public static class HidHelper
                 unsafe
                 {
                     var pName = stackalloc char[MAX_BUF_SIZE / sizeof(char)];
-                    if (Hid.HidD_GetProductString(fh, (IntPtr)pName, MAX_BUF_SIZE))
+                    if (Hid.HidD_GetIndexedString(fh, HIDStringIndex.Product, (IntPtr)pName, MAX_BUF_SIZE))
                         productName = new string(pName);
+
+                    if( String.IsNullOrEmpty(productName) )
+                    {
+                        if (Hid.HidD_GetProductString(fh, (IntPtr)pName, MAX_BUF_SIZE))
+                            productName = new string(pName);
+                    }
 
                     if (Hid.HidD_GetManufacturerString(fh, (IntPtr)pName, MAX_BUF_SIZE))
                         manufacturer = new string(pName);
@@ -104,10 +134,10 @@ public static class HidHelper
             }
         }
 
-        return new HidDeviceDetail(hidDevicePath, friendlyName, manufacturer, productName);
+        return new HidDeviceDetail(hDevice, hidDevicePath, friendlyName, manufacturer, productName);
     }
 
-    private static string GetDevicePath(IntPtr hDevice)
+    private static string GetDevicePath(HDEVICE hDevice)
     {
         int devicePathSize = 0;
         User32.GetRawInputDeviceInfo(hDevice, RIDI.DEVICENAME, IntPtr.Zero, ref devicePathSize);
@@ -128,7 +158,7 @@ public static class HidHelper
     private static string GetDeviceInstanceId(ref Guid hidGuid)
     {
         var deviceInfoSet = SetupApi.SetupDiGetClassDevs(ref hidGuid, IntPtr.Zero, Null<HWND>.Value, DIGCF.DIGCF_PRESENT | DIGCF.DIGCF_DEVICEINTERFACE);
-        if ( deviceInfoSet.IsNull() )
+        if (deviceInfoSet.IsNull())
             return "";
 
         try
@@ -180,6 +210,8 @@ public static class HidHelper
 /// HIDデバイス詳細
 /// </summary>
 public record HidDeviceDetail(
+    /// <summary>デバイスハンドル</summary>
+    HDEVICE Handle,
     /// <summary>デバイスパス</summary>
     HidDevicePath DevicePath,
     /// <summary>フレンドリー名</summary>
@@ -190,7 +222,7 @@ public record HidDeviceDetail(
     string ProductName = "")
 {
     /// <summary>空のインスタンス</summary>
-    public static HidDeviceDetail Empty { get; } = new HidDeviceDetail(HidDevicePath.Empty);
+    public static HidDeviceDetail Empty { get; } = new HidDeviceDetail(Null<HDEVICE>.Value, HidDevicePath.Empty);
 }
 
 /// <summary>
