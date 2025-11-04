@@ -46,16 +46,17 @@ internal class Program
 
 ```
 Push ESC key to exit.
-Handle = 0x0000000000010044, MouseOp = Move, PushState = False , MoveAbsolute = False, X = 0, Y = 2, WheelDelta = 0, MappingVirtualDesktop = False , ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
-Handle = 0x0000000000010044, MouseOp = Move, PushState = False , MoveAbsolute = False, X = 2, Y = 5, WheelDelta = 0, MappingVirtualDesktop = False , ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
-Handle = 0x0000000000010044, MouseOp = Move, PushState = False , MoveAbsolute = False, X = 1, Y = 2, WheelDelta = 0, MappingVirtualDesktop = False , ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
-Handle = 0x0000000000010044, MouseOp = Move, PushState = False , MoveAbsolute = False, X = 0, Y = 0, WheelDelta = 0, MappingVirtualDesktop = False , ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
-Handle = 0x0000000000010044, MouseOp = ButtonLeft, PushState = True , MoveAbsolute = False, X = 0, Y = 0, WheelDelta = 0, MappingVirtualDesktop = False , ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
-Handle = 0x0000000000010044, MouseOp = ButtonLeft, PushState = False , MoveAbsolute = False, X = 0, Y = 0, WheelDelta = 0, MappingVirtualDesktop = False , ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
-Handle = 0x00000000002223D9, VKey = VK_G, PushState = True, ProductName = REALFORCE 108JP, Manufacturer = Topre
-Handle = 0x00000000002223D9, VKey = VK_G, PushState = False, ProductName = REALFORCE 108JP, Manufacturer = Topre
-Handle = 0x00000000002223D9, VKey = VK_S, PushState = True, ProductName = REALFORCE 108JP, Manufacturer = Topre
-Handle = 0x00000000002223D9, VKey = VK_S, PushState = False, ProductName = REALFORCE 108JP, Manufacturer = Topre
+Handle = 0x0000000000010044, MouseOp = Move, PushState = False, MoveAbsolute = False, X = -2, Y = 1, WheelDelta = 0, MappingVirtualDesktop = False, ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
+Handle = 0x0000000000010044, MouseOp = Move, PushState = False, MoveAbsolute = False, X = -1, Y = 1, WheelDelta = 0, MappingVirtualDesktop = False, ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
+Handle = 0x0000000000010044, MouseOp = Move, PushState = False, MoveAbsolute = False, X = 0, Y = 0, WheelDelta = 0, MappingVirtualDesktop = False, ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
+Handle = 0x0000000000010044, MouseOp = Move, PushState = False, MoveAbsolute = False, X = -1, Y = 1, WheelDelta = 0, MappingVirtualDesktop = False, ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
+Handle = 0x0000000000010044, MouseOp = Move, PushState = False, MoveAbsolute = False, X = 0, Y = 0, WheelDelta = 0, MappingVirtualDesktop = False, ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
+Handle = 0x00000000002223D9, VKey = VK_F, PushState = True, ProductName = REALFORCE 108JP, Manufacturer = Topre
+Handle = 0x00000000002223D9, VKey = VK_F, PushState = False, ProductName = REALFORCE 108JP, Manufacturer = Topre
+Handle = 0x00000000002223D9, VKey = VK_H, PushState = True, ProductName = REALFORCE 108JP, Manufacturer = Topre
+Handle = 0x00000000002223D9, VKey = VK_H, PushState = False, ProductName = REALFORCE 108JP, Manufacturer = Topre
+Handle = 0x0000000000010044, MouseOp = VWheel, PushState = False, MoveAbsolute = False, X = 0, Y = 0, WheelDelta = -120, MappingVirtualDesktop = False, ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
+Handle = 0x0000000000010044, MouseOp = VWheel, PushState = False, MoveAbsolute = False, X = 0, Y = 0, WheelDelta = 120, MappingVirtualDesktop = False, ProductName = 2.4G INPUT DEVICE, Manufacturer = MOSART Semi.
 Handle = 0x00000000002223D9, VKey = VK_ESCAPE, PushState = True, ProductName = REALFORCE 108JP, Manufacturer = Topre
 ```
 
