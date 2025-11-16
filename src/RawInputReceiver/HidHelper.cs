@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using RadianTools.Interop.Windows;
 
@@ -9,6 +10,21 @@ namespace RadianTools.Hardware.Input.Windows;
 /// </summary>
 public static class HidHelper
 {
+    /// <summary>
+    /// RegisterRawInputDevicesの簡易呼び出し
+    /// </summary>
+    /// <param name="usagePage">HIDデバイスのUsagePage値</param>
+    /// <param name="usage">HIDデバイスのUsage値</param>
+    /// <param name="hwnd">登録するウィンドウ</param>
+    /// <param name="remove">登録時はFalseを指定、解除時はTrueを指定</param>
+    public static int RegisterRawInputDeviceSlim(HidUsagePage usagePage, HidUsage usage, HWND hwnd, bool remove)
+    {
+        var device = new RAWINPUTDEVICE(usagePage, usage, hwnd, remove);
+        var result = User32.RegisterRawInputDevices(in device, 1, Marshal.SizeOf<RAWINPUTDEVICE>());
+        Debug.WriteLine($"{nameof(RegisterRawInputDeviceSlim)}({usagePage}, {usage}, hwnd:{hwnd.Value:X16}, remove:{remove}) = {result}");
+        return result;
+    }
+
     /// <summary>
     /// 存在するRAWINPUTデバイスのデバイスハンドルを取得する。
     /// </summary>
@@ -99,7 +115,7 @@ public static class HidHelper
                     if (Hid.HidD_GetIndexedString(fh, HIDStringIndex.Product, (IntPtr)pName, MAX_BUF_SIZE))
                         productName = new string(pName);
 
-                    if( String.IsNullOrEmpty(productName) )
+                    if (String.IsNullOrEmpty(productName))
                     {
                         if (Hid.HidD_GetProductString(fh, (IntPtr)pName, MAX_BUF_SIZE))
                             productName = new string(pName);
@@ -116,21 +132,17 @@ public static class HidHelper
         }
 
         var friendlyName = "";
-        if (hidDevicePath.InterfaceClassGuid.HasValue)
+        if (hidDevicePath != null)
         {
-            var deviceGuidVal = hidDevicePath.InterfaceClassGuid.Value;
-            var deviceInstanceId = GetDeviceInstanceId(ref deviceGuidVal);
-            if (!string.IsNullOrEmpty(deviceInstanceId))
+            var deviceInstanceId = DevicePathToDeviceInstanceId(devicePath);
+            const int CM_LOCATE_DEVNODE_NORMAL = 0x00000000;
+            var cr = Cfgmgr32.CM_Locate_DevNode(out var devInst, deviceInstanceId, CM_LOCATE_DEVNODE_NORMAL);
+            if (cr == CONFIGRET.CR_SUCCESS)
             {
-                const int CM_LOCATE_DEVNODE_NORMAL = 0x00000000;
-                var cr = Cfgmgr32.CM_Locate_DevNode(out var devInst, deviceInstanceId, CM_LOCATE_DEVNODE_NORMAL);
-                if (cr == CONFIGRET.CR_SUCCESS)
-                {
-                    friendlyName = GetDevNodeProperty(devInst, in DEVPKEY.NAME);
+                friendlyName = GetDevNodeProperty(devInst, in DEVPKEY.NAME);
 
-                    if (string.IsNullOrEmpty(manufacturer))
-                        manufacturer = GetDevNodeProperty(devInst, in DEVPKEY.Device_Manufacturer);
-                }
+                if (string.IsNullOrEmpty(manufacturer))
+                    manufacturer = GetDevNodeProperty(devInst, in DEVPKEY.Device_Manufacturer);
             }
         }
 
@@ -155,39 +167,19 @@ public static class HidHelper
         }
     }
 
-    private static string GetDeviceInstanceId(ref Guid hidGuid)
+    private static string DevicePathToDeviceInstanceId(string devicePath)
     {
-        var deviceInfoSet = SetupApi.SetupDiGetClassDevs(ref hidGuid, IntPtr.Zero, Null<HWND>.Value, DIGCF.DIGCF_PRESENT | DIGCF.DIGCF_DEVICEINTERFACE);
-        if (deviceInfoSet.IsNull())
-            return "";
+        // 先頭の "\\?\" を除去
+        if (devicePath.StartsWith(@"\\?\"))
+            devicePath = devicePath.Substring(4);
 
-        try
-        {
-            SP_DEVICE_INTERFACE_DATA interfaceData = new SP_DEVICE_INTERFACE_DATA
-            {
-                cbSize = (uint)Marshal.SizeOf(typeof(SP_DEVICE_INTERFACE_DATA))
-            };
-            SP_DEVINFO_DATA devInfoData = new SP_DEVINFO_DATA
-            {
-                cbSize = (uint)Marshal.SizeOf(typeof(SP_DEVINFO_DATA))
-            };
+        // GUID の前までを抽出（# で区切られている）
+        int guidIndex = devicePath.IndexOf("#{");
+        if (guidIndex >= 0)
+            devicePath = devicePath.Substring(0, guidIndex);
 
-            if (!SetupApi.SetupDiEnumDeviceInterfaces(deviceInfoSet, IntPtr.Zero, ref hidGuid, 0, ref interfaceData))
-                return "";
-
-            SetupApi.SetupDiGetDeviceInterfaceDetail(deviceInfoSet, ref interfaceData, IntPtr.Zero, 0, out var requiredSize, ref devInfoData);
-
-            SetupApi.SetupDiGetDeviceInstanceId(deviceInfoSet, ref devInfoData, IntPtr.Zero, 0, out requiredSize);
-
-            Span<char> bufInstanceId = stackalloc char[(int)requiredSize];
-            SetupApi.SetupDiGetDeviceInstanceId(deviceInfoSet, ref devInfoData, ref bufInstanceId[0], requiredSize, out requiredSize);
-
-            return new string(bufInstanceId).TrimEnd('\0');
-        }
-        finally
-        {
-            SetupApi.SetupDiDestroyDeviceInfoList(deviceInfoSet);
-        }
+        // インスタンス ID の形式に変換（# → \）
+        return devicePath.Replace('#', '\\');
     }
 
     private static string GetDevNodeProperty(DEVINST devInst, in DEVPROPKEY devPropKey)

@@ -124,6 +124,8 @@ public struct RAWINPUT
         public RAWMOUSE mouse;
         [FieldOffset(0)]
         public RAWKEYBOARD keyboard;
+        [FieldOffset(0)]
+        public RAWHID hid;
     }
 
     public RAWINPUTHEADER header;
@@ -132,28 +134,15 @@ public struct RAWINPUT
 
 public struct RAWINPUTDEVICE
 {
-    public short UsagePage;
-    public short Usage;
+    public HidUsagePage UsagePage;
+    public HidUsage Usage;
     public RIDEV Flags;
     public HWND HWndTarget;
 
-    public RAWINPUTDEVICE(RIM_TYPE deviceType, HWND hWndTarget, bool remove)
+    public RAWINPUTDEVICE(HidUsagePage usagePage, HidUsage usage, HWND hWndTarget, bool remove)
     {
-        switch (deviceType)
-        {
-            case RIM_TYPE.RIM_TYPEMOUSE:
-                UsagePage = 1;
-                Usage = 2;
-                break;
-
-            case RIM_TYPE.RIM_TYPEKEYBOARD:
-                UsagePage = 1;
-                Usage = 6;
-                break;
-
-            default:
-                throw new ArgumentException($"RIM_TYPE {deviceType:D} is not supported.");
-        }
+        UsagePage = usagePage;
+        Usage = usage;
 
         if (remove)
         {
@@ -162,7 +151,7 @@ public struct RAWINPUTDEVICE
         }
         else
         {
-            Flags = RIDEV.RIDEV_INPUTSINK | RIDEV.RIDEV_NOLEGACY;
+            Flags = RIDEV.RIDEV_INPUTSINK;
             HWndTarget = hWndTarget;
         }
     }
@@ -208,6 +197,14 @@ public record struct RAWMOUSE
     public int ExtraInformation;
 }
 
+[StructLayout(LayoutKind.Sequential, Pack = 2)]
+public struct RAWHID
+{
+    public int dwSizeHid;
+    public int dwCount;
+    public IntPtr bRawData;
+}
+
 [StructLayout(LayoutKind.Sequential)]
 public struct RECT
 {
@@ -215,24 +212,6 @@ public struct RECT
     public int Top;
     public int Right;
     public int Bottom;
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public struct SP_DEVICE_INTERFACE_DATA
-{
-    public uint cbSize;
-    public Guid InterfaceClassGuid;
-    public uint Flags;
-    public IntPtr Reserved;
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public struct SP_DEVINFO_DATA
-{
-    public uint cbSize;
-    public Guid ClassGuid;
-    public uint DevInst;
-    public IntPtr Reserved;
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -309,12 +288,6 @@ public record struct HRAWINPUT(IntPtr Value) : IPtrHandle
 {
     public static explicit operator IntPtr(HRAWINPUT value) => value.Value;
     public static explicit operator HRAWINPUT(IntPtr value) => new HRAWINPUT(value);
-}
-
-public record struct HDEVINFO(IntPtr Value) : IPtrHandle
-{
-    public static explicit operator IntPtr(HDEVINFO value) => value.Value;
-    public static explicit operator HDEVINFO(IntPtr value) => new HDEVINFO(value);
 }
 
 #endregion

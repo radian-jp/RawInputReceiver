@@ -14,7 +14,7 @@ public static class User32
     public static extern int GetRawInputData(
         HRAWINPUT hRawInput,
         int command,
-        out RAWINPUT data,
+        ref byte data,
         ref int size,
         int headerSize);
 

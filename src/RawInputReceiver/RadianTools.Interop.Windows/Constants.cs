@@ -108,16 +108,6 @@ public enum FILE_DISPOSITION
     TRUNCATE_EXISTING = 5,
 }
 
-[Flags]
-public enum DIGCF
-{
-    DIGCF_DEFAULT = 0x01,
-    DIGCF_PRESENT = 0x02,
-    DIGCF_ALLCLASSES = 0x04,
-    DIGCF_PROFILE = 0x08,
-    DIGCF_DEVICEINTERFACE = 0x10,
-}
-
 /// <summary>
 /// GetWindowLongPtr / SetWindowLongPtr 用のインデックス定数（GWLP_）
 /// </summary>
@@ -224,6 +214,32 @@ public enum RIM_TYPE : int
     RIM_TYPEMOUSE = 0,
     RIM_TYPEKEYBOARD = 1,
     RIM_TYPEHID = 2,
+}
+
+public enum HidUsagePage : ushort
+{
+    Undefined = 0x00,
+    GenericDesktop = 0x01,
+    SimulationControls = 0x02,
+    VRControls = 0x03,
+    SportControls = 0x04,
+    GameControls = 0x05,
+    Keyboard = 0x07,
+    LED = 0x08,
+    Button = 0x09,
+    Consumer = 0x0C,
+    VendorDefined = 0xFF00
+}
+
+public enum HidUsage : ushort
+{
+    Pointer = 0x01,
+    Mouse = 0x02,
+    Joystick = 0x04,
+    Gamepad = 0x05,
+    Keyboard = 0x06,
+    Keypad = 0x07,
+    SystemControl = 0x80
 }
 
 [Flags]
